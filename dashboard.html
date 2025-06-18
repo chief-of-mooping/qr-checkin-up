@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>รายงานเข้าเรียน - ระบบเช็คชื่อนิสิต ม.พะเยา</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .controls {
+            padding: 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .controls-row {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .control-group label {
+            font-weight: 500;
+            color: #495057;
+            font-size: 14px;
+        }
+        
+        .control-group input,
+        .control-group select {
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .stat-card.success {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        }
+        
+        .stat-card.warning {
+            background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+        }
+        
+        .stat-number {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .table-container {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin: 20px 0;
+        }
+        
+        .table-header {
+            background: #f8f9fa;
+            padding: 20px;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .table-header h3 {
+            margin: 0;
+            color: #495057;
+        }
+        
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .table th,
+        .table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+            position: sticky;
+            top: 0;
+        }
+        
+        .table tbody tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .table tbody tr:nth-child(even) {
+            background: #fafafa;
+        }
+        
+        .table tbody tr:nth-child(even):hover {
+            background: #f0f0f0;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .status-badge.present {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-badge.absent {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #6c757d;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 50px;
+            color: #6c757d;
+        }
+        
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+        
+        @media (max-width: 768px) {
+            .controls-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .table-container {
+                overflow-x: auto;
+            }
+            
+            .table {
+                min-width: 600px;
+            }
+            
+            .nav-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 รายงานเข้าเรียน</h1>
+            <p>122334 การจัดการพาณิชย์อิเลคทรอนิกส์ | กลุ่ม 1</p>
+        </div>
+        
+        <div class="controls">
+            <div class="controls-row">
+                <div class="control-group">
+                    <label for="dateSelect">เลือกวันที่:</label>
+                    <input type="date" id="dateSelect" />
+                </div>
+                
+                <div class="control-group">
+                    <label>&nbsp;</label>
+                    <button id="loadDataBtn" class="btn btn-primary">📊 โหลดข้อมูล</button>
+                </div>
+                
+                <div class="control-group">
+                    <label>&nbsp;</label>
+                    <button id="exportBtn" class="btn btn-success" style="display: none;">📁 Export CSV</button>
+                </div>
+                
+                <div class="control-group">
+                    <label>&nbsp;</label>
+                    <button id="exportAllBtn" class="btn btn-secondary">📋 Export รายชื่อทั้งหมด</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="content">
+            <div id="statsSection" style="display: none;">
+                <div class="stats-grid">
+                    <div class="stat-card success">
+                        <div class="stat-number" id="presentCount">0</div>
+                        <div class="stat-label">เข้าเรียน</div>
+                    </div>
+                    <div class="stat-card warning">
+                        <div class="stat-number" id="absentCount">0</div>
+                        <div class="stat-label">ขาดเรียน</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalCount">51</div>
+                        <div class="stat-label">รวมทั้งหมด</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="attendanceRate">0%</div>
+                        <div class="stat-label">เปอร์เซ็นต์เข้าเรียน</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="table-container">
+                <div class="table-header">
+                    <h3 id="tableTitle">รายงานเข้าเรียน</h3>
+                    <div id="lastUpdated" style="font-size: 14px; color: #6c757d;"></div>
+                </div>
+                
+                <div id="loadingSection" class="loading">
+                    <div class="spinner"></div>
+                    <p>กำลังโหลดข้อมูล...</p>
+                </div>
+                
+                <div id="emptySection" class="empty-state" style="display: none;">
+                    <div class="empty-state-icon">📝</div>
+                    <h3>ยังไม่มีข้อมูล</h3>
+                    <p>กรุณาเลือกวันที่และคลิก "โหลดข้อมูล" เพื่อดูรายงาน</p>
+                </div>
+                
+                <div id="tableSection" style="display: none;">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ลำดับ</th>
+                                <th>รหัสนิสิต</th>
+                                <th>ชื่อ - นามสกุล</th>
+                                <th>อีเมล</th>
+                                <th>สถานะ</th>
+                                <th>เวลาเช็คชื่อ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="attendanceTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="nav-buttons">
+                <a href="home.html" class="btn btn-secondary">🏠 หน้าหลัก</a>
+                <a href="index.html" class="btn btn-primary">📱 สร้าง QR Code</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
+        import { getFirestore, collection, getDocs, query, orderBy } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
+
+        // Firebase configuration - Config จริงของคุณ
+        const firebaseConfig = {
+            apiKey: "AIzaSyDeD73Yg2QhPXl0dD40uvCsVejpf38OYeY",
+            authDomain: "qr-checkin-up.firebaseapp.com",
+            projectId: "qr-checkin-up",
+            storageBucket: "qr-checkin-up.firebasestorage.app",
+            messagingSenderId: "780428257804",
+            appId: "1:780428257804:web:31b68ff043623144679c29"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // ข้อมูลนิสิตทั้งหมด
+        const allStudents = {
+            "65011610": { "name": "นางสาวณัฐนันท์ กรมทอง", "email": "65011610@up.ac.th" },
+            "65011621": { "name": "นางสาวเทวรินทร์ สลีอ่อน", "email": "65011621@up.ac.th" },
+            "65011632": { "name": "นางสาวธันวา สวยค้าข้าว", "email": "65011632@up.ac.th" },
+            "65011643": { "name": "นางสาวนรินทร แดงจีน", "email": "65011643@up.ac.th" },
+            "65011665": { "name": "นายวัชรพงษ์ อินต๊ะแก้ว", "email": "65011665@up.ac.th" },
+            "65011687": { "name": "นางสาวสิริกร ธิแก้ว", "email": "65011687@up.ac.th" },
+            "65011698": { "name": "นางสาวสุวรรณา ปลื้มคณะ", "email": "65011698@up.ac.th" },
+            "65012464": { "name": "นางสาวภัสราภรณ์ สายดวง", "email": "65012464@up.ac.th" },
+            "65012778": { "name": "นางสาวกุลธิดา ดอนสีดา", "email": "65012778@up.ac.th" },
+            "65072024": { "name": "นางสาวชมพูนุช บุญแรง", "email": "65072024@up.ac.th" },
+            "65072025": { "name": "นางสาวชยุดา รอดวินิจ", "email": "65072025@up.ac.th" },
+            "65072034": { "name": "นายณัฐชนนท์ จันทร์ทิมา", "email": "65072034@up.ac.th" },
+            "65072046": { "name": "นายทรงพล เชื้อสีดา", "email": "65072046@up.ac.th" },
+            "65072074": { "name": "นางสาวปาริชาติ ผาสุกสถิตพร", "email": "65072074@up.ac.th" },
+            "65072081": { "name": "นายพศวีร์ มั่งสูงเนิน", "email": "65072081@up.ac.th" },
+            "65072094": { "name": "นางสาวฟาดีล๊ะ แลมันเส็น", "email": "65072094@up.ac.th" },
+            "65072100": { "name": "นางสาวภัสสรลาวัณย์ เย็นทรวง", "email": "65072100@up.ac.th" },
+            "65072131": { "name": "นางสาวศรุตา ต้าวพรม", "email": "65072131@up.ac.th" },
+            "65072148": { "name": "นางสาวเสาวนีย์ ศรีตั้ง", "email": "65072148@up.ac.th" },
+            "65072157": { "name": "นางสาวอรัญญา คงสมของ", "email": "65072157@up.ac.th" },
+            "65072158": { "name": "นางสาวอริสรา คมจริง", "email": "65072158@up.ac.th" },
+            "65072159": { "name": "นางสาวอลิตา นาคะรัตน์วิจิตร", "email": "65072159@up.ac.th" },
+            "65072170": { "name": "นางสาวธิติมา ใจเขียว", "email": "65072170@up.ac.th" },
+            "65072180": { "name": "นางสาวกมลรัตน์ ทะนันชัย", "email": "65072180@up.ac.th" },
+            "65072206": { "name": "นางสาววชิรภรณ์ แปงเงิน", "email": "65072206@up.ac.th" },
+            "65077015": { "name": "นางสาวเกวลิน ฝั้นใจ", "email": "65077015@up.ac.th" },
+            "66023670": { "name": "นายนครินทร์ ปลาสุวรรณ", "email": "66023670@up.ac.th" },
+            "66070123": { "name": "นางสาวสุคนธา แน่นอุดร", "email": "66070123@up.ac.th" },
+            "66072004": { "name": "นางสาวกุลณัฐ ศรีธง", "email": "66072004@up.ac.th" },
+            "66072006": { "name": "นายเขมทัต กำรูป", "email": "66072006@up.ac.th" },
+            "66072011": { "name": "นางสาวจุฑาทิพย์ ทองจันทร์", "email": "66072011@up.ac.th" },
+            "66072017": { "name": "นายชัยมงคล บรมฤทธิ์", "email": "66072017@up.ac.th" },
+            "66072018": { "name": "นายชูศักดิ์ ใจยืน", "email": "66072018@up.ac.th" },
+            "66072026": { "name": "นายทยานยุทธาดา เชื้อเมืองพาน", "email": "66072026@up.ac.th" },
+            "66072044": { "name": "นางสาวนฤมล ปรองดอง", "email": "66072044@up.ac.th" },
+            "66072056": { "name": "นางสาวปิยะนันท์ จันทร์สา", "email": "66072056@up.ac.th" },
+            "66072075": { "name": "นายวรมัน แก่นจำปา", "email": "66072075@up.ac.th" },
+            "66072078": { "name": "นางสาววิมลสิริ แสงศรีจันทร์", "email": "66072078@up.ac.th" },
+            "66072096": { "name": "นายเสฎฐวุฒิ จินา", "email": "66072096@up.ac.th" },
+            "66072099": { "name": "นางสาวเหมือนฝัน สีพะเนา", "email": "66072099@up.ac.th" },
+            "66072104": { "name": "นางสาวกมลรัตน์ ไพรงามพลอย", "email": "66072104@up.ac.th" },
+            "66072107": { "name": "นางสาวคำดู่ คำดี", "email": "66072107@up.ac.th" },
+            "66072108": { "name": "นางสาวจิดาภา ต๊ะปัญญา", "email": "66072108@up.ac.th" },
+            "66072113": { "name": "นางสาวณัฐธยาน์ อุ่นติ๊บ", "email": "66072113@up.ac.th" },
+            "66072116": { "name": "นางสาวธารินี เกียรติแก้วยศ", "email": "66072116@up.ac.th" },
+            "66072139": { "name": "นางสาวจิรนันท์ รัตนะศิล", "email": "66072139@up.ac.th" },
+            "66072148": { "name": "นางสาวธนภรณ์ พิมมหาวัน", "email": "66072148@up.ac.th" },
+            "66072174": { "name": "นางสาวโหมอ ลุงปอ", "email": "66072174@up.ac.th" },
+            "66072175": { "name": "นายอศิรวัชร อำไพวัชรากุล", "email": "66072175@up.ac.th" },
+            "66072179": { "name": "นายกันต์กวี ศรีวิจัย", "email": "66072179@up.ac.th" },
+            "66202196": { "name": "นางสาวครองขวัญ นีระเนตร", "email": "66202196@up.ac.th" }
+        };
+
+        let currentAttendanceData = [];
+
+        // ตั้งค่าวันที่เริ่มต้น
+        function initializeDateSelect() {
+            const dateSelect = document.getElementById('dateSelect');
+            const today = new Date();
+            dateSelect.value = today.toISOString().split('T')[0];
+            
+            // แสดงข้อมูลเริ่มต้น
+            hideLoading();
+            showEmptyState();
+        }
+
+        // ซ่อน loading
+        function hideLoading() {
+            document.getElementById('loadingSection').style.display = 'none';
+        }
+
+        // แสดงสถานะว่าง
+        function showEmptyState() {
+            document.getElementById('emptySection').style.display = 'block';
+            document.getElementById('tableSection').style.display = 'none';
+            document.getElementById('statsSection').style.display = 'none';
+        }
+
+        // โหลดข้อมูลเข้าเรียน
+        async function loadAttendanceData() {
+            const selectedDate = document.getElementById('dateSelect').value;
+            if (!selectedDate) {
+                alert('กรุณาเลือกวันที่');
+                return;
+            }
+
+            // แสดง loading
+            document.getElementById('loadingSection').style.display = 'block';
+            document.getElementById('emptySection').style.display = 'none';
+            document.getElementById('tableSection').style.display = 'none';
+            document.getElementById('statsSection').style.display = 'none';
+
+            try {
+                // ดึงข้อมูลจาก Firestore
+                const studentsRef = collection(db, 'checkins', selectedDate, 'students');
+                const q = query(studentsRef, orderBy('checkinTime', 'asc'));
+                const querySnapshot = await getDocs(q);
+
+                const attendedStudents = {};
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    attendedStudents[data.studentId] = {
+                        ...data,
+                        checkinTime: data.checkinTime?.toDate() || null
+                    };
+                });
+
+                // สร้างข้อมูลรายงาน
+                currentAttendanceData = [];
+                let index = 1;
+
+                Object.keys(allStudents).forEach(studentId => {
+                    const student = allStudents[studentId];
+                    const attendance = attendedStudents[studentId];
+                    
+                    currentAttendanceData.push({
+                        index: index++,
+                        studentId: studentId,
+                        name: student.name,
+                        email: student.email,
+                        status: attendance ? 'present' : 'absent',
+                        checkinTime: attendance?.checkinTime || null
+                    });
+                });
+
+                // แสดงข้อมูล
+                displayAttendanceData(selectedDate);
+                
+            } catch (error) {
+                console.error('Error loading data:', error);
+                alert('เกิดข้อผิดพลาดในการโหลดข้อมูล');
+                hideLoading();
+                showEmptyState();
+            }
+        }
+
+        // แสดงข้อมูลในตาราง
+        function displayAttendanceData(date) {
+            hideLoading();
+            
+            const presentCount = currentAttendanceData.filter(s => s.status === 'present').length;
+            const absentCount = currentAttendanceData.filter(s => s.status === 'absent').length;
+            const totalCount = currentAttendanceData.length;
+            const attendanceRate = totalCount > 0 ? Math.round((presentCount / totalCount) * 100) : 0;
+
+            // อัพเดทสถิติ
+            document.getElementById('presentCount').textContent = presentCount;
+            document.getElementById('absentCount').textContent = absentCount;
+            document.getElementById('totalCount').textContent = totalCount;
+            document.getElementById('attendanceRate').textContent = attendanceRate + '%';
+
+            // อัพเดทหัวตาราง
+            const formattedDate = new Date(date + 'T00:00:00').toLocaleDateString('th-TH', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                weekday: 'long'
+            });
+            document.getElementById('tableTitle').textContent = `รายงานเข้าเรียน - ${formattedDate}`;
+            document.getElementById('lastUpdated').textContent = `อัพเดทล่าสุด: ${new Date().toLocaleString('th-TH')}`;
+
+            // สร้างแถวตาราง
+            const tbody = document.getElementById('attendanceTableBody');
+            tbody.innerHTML = '';
+
+            currentAttendanceData.forEach(student => {
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td>${student.index}</td>
+                    <td><strong>${student.studentId}</strong></td>
+                    <td>${student.name}</td>
+                    <td>${student.email}</td>
+                    <td>
+                        <span class="status-badge ${student.status}">
+                            ${student.status === 'present' ? '✅ เข้าเรียน' : '❌ ขาดเรียน'}
+                        </span>
+                    </td>
+                    <td>
+                        ${student.checkinTime ? 
+                            student.checkinTime.toLocaleString('th-TH', {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                second: '2-digit'
+                            }) : 
+                            '-'
+                        }
+                    </td>
+                `;
+            });
+
+            // แสดงตารางและสถิติ
+            document.getElementById('tableSection').style.display = 'block';
+            document.getElementById('statsSection').style.display = 'block';
+            document.getElementById('exportBtn').style.display = 'inline-block';
+        }
+
+        // Export CSV
+        function exportToCSV() {
+            if (currentAttendanceData.length === 0) {
+                alert('ไม่มีข้อมูลให้ Export');
+                return;
+            }
+
+            const selectedDate = document.getElementById('dateSelect').value;
+            const formattedDate = new Date(selectedDate + 'T00:00:00').toLocaleDateString('th-TH');
+            
+            let csvContent = '\ufeff'; // BOM for UTF-8
+            csvContent += `รายงานเข้าเรียน - วันที่ ${formattedDate}\n`;
+            csvContent += `122334 การจัดการพาณิชย์อิเลคทรอนิกส์ กลุ่ม 1\n`;
+            csvContent += `ผู้สอน: ดร.กิตติศักดิ์ ศรีไพโรจน์\n\n`;
+            csvContent += `ลำดับ,รหัสนิสิต,ชื่อ-นามสกุล,อีเมล,สถานะ,เวลาเช็คชื่อ\n`;
+
+            currentAttendanceData.forEach(student => {
+                const checkinTime = student.checkinTime ? 
+                    student.checkinTime.toLocaleString('th-TH') : '-';
+                const status = student.status === 'present' ? 'เข้าเรียน' : 'ขาดเรียน';
+                
+                csvContent += `${student.index},"${student.studentId}","${student.name}","${student.email}","${status}","${checkinTime}"\n`;
+            });
+
+            // สรุปสถิติ
+            const presentCount = currentAttendanceData.filter(s => s.status === 'present').length;
+            const absentCount = currentAttendanceData.filter(s => s.status === 'absent').length;
+            const totalCount = currentAttendanceData.length;
+            const attendanceRate = totalCount > 0 ? ((presentCount / totalCount) * 100).toFixed(2) : 0;
+
+            csvContent += `\nสรุป\n`;
+            csvContent += `เข้าเรียน,${presentCount}\n`;
+            csvContent += `ขาดเรียน,${absentCount}\n`;
+            csvContent += `รวมทั้งหมด,${totalCount}\n`;
+            csvContent += `เปอร์เซ็นต์เข้าเรียน,${attendanceRate}%\n`;
+
+            // ดาวน์โหลดไฟล์
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `รายงานเข้าเรียน_${selectedDate}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Export รายชื่อทั้งหมด
+        function exportAllStudents() {
+            let csvContent = '\ufeff'; // BOM for UTF-8
+            csvContent += `รายชื่อนิสิตทั้งหมด\n`;
+            csvContent += `122334 การจัดการพาณิชย์อิเลคทรอนิกส์ กลุ่ม 1\n`;
+            csvContent += `ผู้สอน: ดร.กิตติศักดิ์ ศรีไพโรจน์\n`;
+            csvContent += `ภาคการศึกษา: 1/2568\n\n`;
+            csvContent += `ลำดับ,รหัสนิสิต,ชื่อ-นามสกุล,อีเมล\n`;
+
+            let index = 1;
+            Object.keys(allStudents).forEach(studentId => {
+                const student = allStudents[studentId];
+                csvContent += `${index++},"${studentId}","${student.name}","${student.email}"\n`;
+            });
+
+            csvContent += `\nรวมทั้งหมด: ${Object.keys(allStudents).length} คน\n`;
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `รายชื่อนิสิตทั้งหมด_122334.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Event Listeners
+        document.getElementById('loadDataBtn').addEventListener('click', loadAttendanceData);
+        document.getElementById('exportBtn').addEventListener('click', exportToCSV);
+        document.getElementById('exportAllBtn').addEventListener('click', exportAllStudents);
+
+        // โหลดข้อมูลเมื่อกด Enter ในช่องวันที่
+        document.getElementById('dateSelect').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                loadAttendanceData();
+            }
+        });
+
+        // เริ่มต้นระบบ
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeDateSelect();
+        });
+    </script>
+</body>
+</html>

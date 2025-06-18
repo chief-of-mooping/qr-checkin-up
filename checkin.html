@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เช็คชื่อเข้าเรียน - ระบบเช็คชื่อนิสิต ม.พะเยา</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .container {
+            max-width: 500px;
+            width: 100%;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .status-card {
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .status-card.loading {
+            background: #e8f4fd;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        
+        .status-card.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        
+        .status-card.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        
+        .status-card.warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+        
+        .login-section {
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        .login-btn {
+            background: #4285f4;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .login-btn:hover {
+            background: #3367d6;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(66, 133, 244, 0.3);
+        }
+        
+        .login-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ffffff;
+            border-top: 2px solid transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .user-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+        
+        .user-info h3 {
+            color: #2c5aa0;
+            margin-bottom: 15px;
+        }
+        
+        .user-info p {
+            margin: 8px 0;
+            color: #666;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-home {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-home:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+        
+        .checkin-btn {
+            background: #28a745;
+            color: white;
+            font-size: 16px;
+            padding: 15px 30px;
+            margin: 20px 0;
+        }
+        
+        .checkin-btn:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+        
+        .checkin-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                margin: 20px;
+            }
+            
+            .header {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 20px;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .nav-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>เช็คชื่อเข้าเรียน</h1>
+            <p>122334 การจัดการพาณิชย์อิเลคทรอนิกส์</p>
+        </div>
+        
+        <div class="content">
+            <div id="statusMessage" class="status-card loading">
+                <div class="spinner" style="margin: 0 auto 10px;"></div>
+                กำลังตรวจสอบข้อมูล...
+            </div>
+            
+            <div id="loginSection" class="login-section" style="display: none;">
+                <h3>กรุณาเข้าสู่ระบบ</h3>
+                <p style="margin: 15px 0; color: #666;">ใช้บัญชี Google ของมหาวิทยาลัย (@up.ac.th)</p>
+                <button id="loginBtn" class="login-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                    </svg>
+                    เข้าสู่ระบบด้วย Google
+                </button>
+            </div>
+            
+            <div id="userSection" style="display: none;">
+                <div class="user-info">
+                    <h3>ข้อมูลผู้ใช้</h3>
+                    <p><strong>ชื่อ:</strong> <span id="userName"></span></p>
+                    <p><strong>อีเมล:</strong> <span id="userEmail"></span></p>
+                    <p><strong>รหัสนิสิต:</strong> <span id="studentId"></span></p>
+                </div>
+                
+                <div style="text-align: center;">
+                    <button id="checkinBtn" class="btn checkin-btn">
+                        ✅ เช็คชื่อเข้าเรียน
+                    </button>
+                </div>
+            </div>
+            
+            <div class="nav-buttons">
+                <a href="home.html" class="btn btn-home">🏠 หน้าหลัก</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
+        import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js';
+        import { getFirestore, doc, setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
+
+        // Firebase configuration - Config จริงของคุณ
+        const firebaseConfig = {
+            apiKey: "AIzaSyDeD73Yg2QhPXl0dD40uvCsVejpf38OYeY",
+            authDomain: "qr-checkin-up.firebaseapp.com",
+            projectId: "qr-checkin-up",
+            storageBucket: "qr-checkin-up.firebasestorage.app",
+            messagingSenderId: "780428257804",
+            appId: "1:780428257804:web:31b68ff043623144679c29"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const provider = new GoogleAuthProvider();
+        
+        // กำหนดโดเมนที่อนุญาต
+        provider.setCustomParameters({
+            hd: 'up.ac.th'
+        });
+
+        // ข้อมูลนิสิต (แปลงจาก PDF)
+        const studentList = {
+            "65011610": { "name": "นางสาวณัฐนันท์ กรมทอง", "email": "65011610@up.ac.th" },
+            "65011621": { "name": "นางสาวเทวรินทร์ สลีอ่อน", "email": "65011621@up.ac.th" },
+            "65011632": { "name": "นางสาวธันวา สวยค้าข้าว", "email": "65011632@up.ac.th" },
+            "65011643": { "name": "นางสาวนรินทร แดงจีน", "email": "65011643@up.ac.th" },
+            "65011665": { "name": "นายวัชรพงษ์ อินต๊ะแก้ว", "email": "65011665@up.ac.th" },
+            "65011687": { "name": "นางสาวสิริกร ธิแก้ว", "email": "65011687@up.ac.th" },
+            "65011698": { "name": "นางสาวสุวรรณา ปลื้มคณะ", "email": "65011698@up.ac.th" },
+            "65012464": { "name": "นางสาวภัสราภรณ์ สายดวง", "email": "65012464@up.ac.th" },
+            "65012778": { "name": "นางสาวกุลธิดา ดอนสีดา", "email": "65012778@up.ac.th" },
+            "65072024": { "name": "นางสาวชมพูนุช บุญแรง", "email": "65072024@up.ac.th" },
+            "65072025": { "name": "นางสาวชยุดา รอดวินิจ", "email": "65072025@up.ac.th" },
+            "65072034": { "name": "นายณัฐชนนท์ จันทร์ทิมา", "email": "65072034@up.ac.th" },
+            "65072046": { "name": "นายทรงพล เชื้อสีดา", "email": "65072046@up.ac.th" },
+            "65072074": { "name": "นางสาวปาริชาติ ผาสุกสถิตพร", "email": "65072074@up.ac.th" },
+            "65072081": { "name": "นายพศวีร์ มั่งสูงเนิน", "email": "65072081@up.ac.th" },
+            "65072094": { "name": "นางสาวฟาดีล๊ะ แลมันเส็น", "email": "65072094@up.ac.th" },
+            "65072100": { "name": "นางสาวภัสสรลาวัณย์ เย็นทรวง", "email": "65072100@up.ac.th" },
+            "65072131": { "name": "นางสาวศรุตา ต้าวพรม", "email": "65072131@up.ac.th" },
+            "65072148": { "name": "นางสาวเสาวนีย์ ศรีตั้ง", "email": "65072148@up.ac.th" },
+            "65072157": { "name": "นางสาวอรัญญา คงสมของ", "email": "65072157@up.ac.th" },
+            "65072158": { "name": "นางสาวอริสรา คมจริง", "email": "65072158@up.ac.th" },
+            "65072159": { "name": "นางสาวอลิตา นาคะรัตน์วิจิตร", "email": "65072159@up.ac.th" },
+            "65072170": { "name": "นางสาวธิติมา ใจเขียว", "email": "65072170@up.ac.th" },
+            "65072180": { "name": "นางสาวกมลรัตน์ ทะนันชัย", "email": "65072180@up.ac.th" },
+            "65072206": { "name": "นางสาววชิรภรณ์ แปงเงิน", "email": "65072206@up.ac.th" },
+            "65077015": { "name": "นางสาวเกวลิน ฝั้นใจ", "email": "65077015@up.ac.th" },
+            "66023670": { "name": "นายนครินทร์ ปลาสุวรรณ", "email": "66023670@up.ac.th" },
+            "66070123": { "name": "นางสาวสุคนธา แน่นอุดร", "email": "66070123@up.ac.th" },
+            "66072004": { "name": "นางสาวกุลณัฐ ศรีธง", "email": "66072004@up.ac.th" },
+            "66072006": { "name": "นายเขมทัต กำรูป", "email": "66072006@up.ac.th" },
+            "66072011": { "name": "นางสาวจุฑาทิพย์ ทองจันทร์", "email": "66072011@up.ac.th" },
+            "66072017": { "name": "นายชัยมงคล บรมฤทธิ์", "email": "66072017@up.ac.th" },
+            "66072018": { "name": "นายชูศักดิ์ ใจยืน", "email": "66072018@up.ac.th" },
+            "66072026": { "name": "นายทยานยุทธาดา เชื้อเมืองพาน", "email": "66072026@up.ac.th" },
+            "66072044": { "name": "นางสาวนฤมล ปรองดอง", "email": "66072044@up.ac.th" },
+            "66072056": { "name": "นางสาวปิยะนันท์ จันทร์สา", "email": "66072056@up.ac.th" },
+            "66072075": { "name": "นายวรมัน แก่นจำปา", "email": "66072075@up.ac.th" },
+            "66072078": { "name": "นางสาววิมลสิริ แสงศรีจันทร์", "email": "66072078@up.ac.th" },
+            "66072096": { "name": "นายเสฎฐวุฒิ จินา", "email": "66072096@up.ac.th" },
+            "66072099": { "name": "นางสาวเหมือนฝัน สีพะเนา", "email": "66072099@up.ac.th" },
+            "66072104": { "name": "นางสาวกมลรัตน์ ไพรงามพลอย", "email": "66072104@up.ac.th" },
+            "66072107": { "name": "นางสาวคำดู่ คำดี", "email": "66072107@up.ac.th" },
+            "66072108": { "name": "นางสาวจิดาภา ต๊ะปัญญา", "email": "66072108@up.ac.th" },
+            "66072113": { "name": "นางสาวณัฐธยาน์ อุ่นติ๊บ", "email": "66072113@up.ac.th" },
+            "66072116": { "name": "นางสาวธารินี เกียรติแก้วยศ", "email": "66072116@up.ac.th" },
+            "66072139": { "name": "นางสาวจิรนันท์ รัตนะศิล", "email": "66072139@up.ac.th" },
+            "66072148": { "name": "นางสาวธนภรณ์ พิมมหาวัน", "email": "66072148@up.ac.th" },
+            "66072174": { "name": "นางสาวโหมอ ลุงปอ", "email": "66072174@up.ac.th" },
+            "66072175": { "name": "นายอศิรวัชร อำไพวัชรากุล", "email": "66072175@up.ac.th" },
+            "66072179": { "name": "นายกันต์กวี ศรีวิจัย", "email": "66072179@up.ac.th" },
+            "66202196": { "name": "นางสาวครองขวัญ นีระเนตร", "email": "66202196@up.ac.th" }
+        };
+
+        // ตัวแปรสำหรับเก็บสถานะ
+        let currentUser = null;
+        let tokenData = null;
+
+        // ฟังก์ชันแสดงสถานะ
+        function showStatus(message, type = 'loading') {
+            const statusEl = document.getElementById('statusMessage');
+            statusEl.className = `status-card ${type}`;
+            statusEl.innerHTML = type === 'loading' ? 
+                `<div class="spinner" style="margin: 0 auto 10px;"></div>${message}` : 
+                message;
+        }
+
+        // ตรวจสอบ token จาก URL
+        function validateToken() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const token = urlParams.get('token');
+            
+            if (!token) {
+                showStatus('❌ ไม่พบ Token หรือลิงก์ไม่ถูกต้อง', 'error');
+                return false;
+            }
+
+            try {
+                tokenData = JSON.parse(atob(token));
+                const now = Date.now();
+                
+                if (!tokenData.session || !tokenData.timestamp || !tokenData.expires) {
+                    throw new Error('Token format invalid');
+                }
+                
+                if (now > tokenData.expires) {
+                    showStatus('⏰ QR Code หมดอายุแล้ว กรุณาสแกน QR Code ใหม่', 'warning');
+                    return false;
+                }
+                
+                showStatus('✅ Token ถูกต้อง กรุณาเข้าสู่ระบบ', 'success');
+                document.getElementById('loginSection').style.display = 'block';
+                return true;
+                
+            } catch (error) {
+                showStatus('❌ Token ไม่ถูกต้อง', 'error');
+                return false;
+            }
+        }
+
+        // ฟังก์ชันเข้าสู่ระบบ
+        async function signInWithGoogle() {
+            const loginBtn = document.getElementById('loginBtn');
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = '<div class="spinner"></div> กำลังเข้าสู่ระบบ...';
+            
+            try {
+                const result = await signInWithPopup(auth, provider);
+                const user = result.user;
+                
+                // ตรวจสอบโดเมน email
+                if (!user.email.endsWith('@up.ac.th')) {
+                    showStatus('❌ กรุณาใช้อีเมลของมหาวิทยาลัย (@up.ac.th)', 'error');
+                    await auth.signOut();
+                    return;
+                }
+                
+                currentUser = user;
+                handleUserLogin(user);
+                
+            } catch (error) {
+                console.error('Login error:', error);
+                showStatus('❌ เกิดข้อผิดพลาดในการเข้าสู่ระบบ', 'error');
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>เข้าสู่ระบบด้วย Google';
+            }
+        }
+
+        // จัดการเมื่อผู้ใช้เข้าสู่ระบบ
+        function handleUserLogin(user) {
+            const studentId = user.email.split('@')[0];
+            
+            // ตรวจสอบว่ามีในรายชื่อหรือไม่
+            if (!studentList[studentId]) {
+                showStatus('❌ ไม่พบรหัสนิสิตในรายชื่อของรายวิชานี้', 'error');
+                return;
+            }
+            
+            // แสดงข้อมูลผู้ใช้
+            document.getElementById('userName').textContent = studentList[studentId].name;
+            document.getElementById('userEmail').textContent = user.email;
+            document.getElementById('studentId').textContent = studentId;
+            
+            document.getElementById('loginSection').style.display = 'none';
+            document.getElementById('userSection').style.display = 'block';
+            
+            showStatus('✅ พร้อมเช็คชื่อ', 'success');
+        }
+
+        // ฟังก์ชันเช็คชื่อ
+        async function performCheckin() {
+            if (!currentUser || !tokenData) {
+                showStatus('❌ ข้อมูลไม่ครบถ้วน', 'error');
+                return;
+            }
+
+            const checkinBtn = document.getElementById('checkinBtn');
+            checkinBtn.disabled = true;
+            checkinBtn.innerHTML = '<div class="spinner"></div> กำลังบันทึก...';
+            
+            try {
+                const studentId = currentUser.email.split('@')[0];
+                const studentData = studentList[studentId];
+                
+                // บันทึกข้อมูลลง Firestore
+                const docRef = doc(db, 'checkins', tokenData.session, 'students', studentId);
+                
+                await setDoc(docRef, {
+                    studentId: studentId,
+                    name: studentData.name,
+                    email: currentUser.email,
+                    checkinTime: serverTimestamp(),
+                    tokenTimestamp: tokenData.timestamp,
+                    userAgent: navigator.userAgent
+                });
+                
+                showStatus('🎉 เช็คชื่อสำเร็จ! บันทึกเรียบร้อยแล้ว', 'success');
+                checkinBtn.style.display = 'none';
+                
+            } catch (error) {
+                console.error('Checkin error:', error);
+                showStatus('❌ เกิดข้อผิดพลาดในการบันทึก กรุณาลองใหม่', 'error');
+                checkinBtn.disabled = false;
+                checkinBtn.innerHTML = '✅ เช็คชื่อเข้าเรียน';
+            }
+        }
+
+        // Event Listeners
+        document.getElementById('loginBtn').addEventListener('click', signInWithGoogle);
+        document.getElementById('checkinBtn').addEventListener('click', performCheckin);
+
+        // ตรวจสอบสถานะการเข้าสู่ระบบ
+        onAuthStateChanged(auth, (user) => {
+            if (user && user.email.endsWith('@up.ac.th')) {
+                currentUser = user;
+                handleUserLogin(user);
+            }
+        });
+
+        // เริ่มต้นระบบ
+        document.addEventListener('DOMContentLoaded', function() {
+            validateToken();
+        });
+    </script>
+</body>
+</html>

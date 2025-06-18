@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบศูนย์กลางเช็คชื่อนิสิต ม.พะเยา</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+        
+        .menu-container {
+            padding: 40px;
+        }
+        
+        .menu-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        
+        .menu-item {
+            display: block;
+            padding: 25px;
+            background: #f8f9fa;
+            border: none;
+            border-radius: 15px;
+            text-decoration: none;
+            color: #333;
+            transition: all 0.3s ease;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+        
+        .menu-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+        }
+        
+        .menu-item.qr {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            color: white;
+        }
+        
+        .menu-item.checkin {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            color: #333;
+        }
+        
+        .menu-item.dashboard {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            color: #333;
+        }
+        
+        .menu-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            display: block;
+        }
+        
+        .menu-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .menu-desc {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        
+        .course-info {
+            background: #e8f4fd;
+            padding: 20px;
+            margin: 20px;
+            border-radius: 15px;
+            border-left: 5px solid #4facfe;
+        }
+        
+        .course-info h3 {
+            color: #2c5aa0;
+            margin-bottom: 10px;
+        }
+        
+        .course-info p {
+            color: #666;
+            font-size: 14px;
+            margin: 5px 0;
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                margin: 20px auto;
+            }
+            
+            .header {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 20px;
+            }
+            
+            .menu-container {
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>ระบบศูนย์กลางเช็คชื่อนิสิต</h1>
+            <p>มหาวิทยาลัยพะเยา</p>
+        </div>
+        
+        <div class="course-info">
+            <h3>122334 การจัดการพาณิชย์อิเลคทรอนิกส์</h3>
+            <p><strong>กลุ่ม:</strong> 1 | <strong>หน่วยกิต:</strong> 3 (2-2-5)</p>
+            <p><strong>ผู้สอน:</strong> ดร.กิตติศักดิ์ ศรีไพโรจน์</p>
+            <p><strong>ภาคการศึกษา:</strong> 1/2568</p>
+        </div>
+        
+        <div class="menu-container">
+            <div class="menu-grid">
+                <a href="index.html" class="menu-item qr">
+                    <span class="menu-icon">📱</span>
+                    <div class="menu-title">สร้าง QR Code</div>
+                    <div class="menu-desc">สำหรับให้นิสิตสแกนเช็คชื่อ</div>
+                </a>
+                
+                <a href="checkin.html" class="menu-item checkin">
+                    <span class="menu-icon">✅</span>
+                    <div class="menu-title">เช็คชื่อเข้าเรียน</div>
+                    <div class="menu-desc">สำหรับนิสิตเช็คชื่อเข้าเรียน</div>
+                </a>
+                
+                <a href="dashboard.html" class="menu-item dashboard">
+                    <span class="menu-icon">📊</span>
+                    <div class="menu-title">รายงานเข้าเรียน</div>
+                    <div class="menu-desc">ดูรายงานและส่งออกข้อมูล</div>
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
