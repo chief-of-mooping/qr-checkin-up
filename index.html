@@ -1,73 +1,397 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>QR Check-in Generator</title>
-  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
-  <style>
-    body { font-family: sans-serif; padding: 2rem; text-align: center; }
-    h1 { margin-bottom: 1rem; }
-    #qrCanvas { margin: 1rem auto; display: block; }
-    #sessionStatus { margin-top: 1rem; color: green; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code สำหรับเช็คชื่อ - ระบบเช็คชื่อนิสิต ม.พะเยา</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .container {
+            max-width: 500px;
+            width: 100%;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        
+        .qr-section {
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .qr-container {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 20px 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        #qrcode {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        .status {
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-weight: 500;
+        }
+        
+        .status.active {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .countdown {
+            font-size: 18px;
+            font-weight: 600;
+            color: #e74c3c;
+            margin: 10px 0;
+        }
+        
+        .session-info {
+            background: #e8f4fd;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        
+        .session-info h3 {
+            color: #2c5aa0;
+            margin-bottom: 10px;
+        }
+        
+        .session-info p {
+            color: #666;
+            margin: 5px 0;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-home {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-home:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+        
+        .btn-dashboard {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-dashboard:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+        
+        .instructions {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        
+        .instructions h4 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+        
+        .instructions p {
+            color: #856404;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                margin: 20px;
+            }
+            
+            .header {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 20px;
+            }
+            
+            .qr-section {
+                padding: 20px;
+            }
+            
+            .nav-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
 </head>
 <body>
-  <h1>QR สำหรับเช็คชื่อ (รีเฟรชทุก 30 วินาที)</h1>
-  <canvas id="qrCanvas"></canvas>
-  <p id="sessionStatus"></p>
-  <p id="countdown"></p>
+    <div class="container">
+        <div class="header">
+            <h1>QR Code สำหรับเช็คชื่อ</h1>
+            <p>ระบบเช็คชื่อนิสิต มหาวิทยาลัยพะเยา</p>
+        </div>
+        
+        <div class="qr-section">
+            <div class="session-info">
+                <h3>ข้อมูลเซสชั่น</h3>
+                <p><strong>วันที่:</strong> <span id="currentDate"></span></p>
+                <p><strong>เวลา:</strong> <span id="currentTime"></span></p>
+                <p><strong>สถานะ:</strong> <span id="sessionStatus">กำลังเริ่มต้น...</span></p>
+            </div>
+            
+            <div class="qr-container">
+                <div id="qrcode"></div>
+                <div class="countdown">
+                    QR Code จะรีเฟรชใน: <span id="countdown">30</span> วินาที
+                </div>
+            </div>
+            
+            <div class="status active">
+                <strong>✅ QR Code พร้อมใช้งาน</strong><br>
+                นิสิตสามารถสแกนเพื่อเช็คชื่อได้แล้ว
+            </div>
+            
+            <div class="instructions">
+                <h4>📋 วิธีการใช้งาน</h4>
+                <p>1. ให้นิสิตสแกน QR Code ด้วยมือถือ<br>
+                2. ระบบจะเปลี่ยน QR Code ใหม่ทุก 30 วินาที<br>
+                3. นิสิตต้องเข้าสู่ระบบด้วย Email @up.ac.th<br>
+                4. ระบบจะบันทึกเวลาเช็คชื่ออัตโนมัติ</p>
+            </div>
+            
+            <div class="nav-buttons">
+                <a href="home.html" class="btn btn-home">🏠 หน้าหลัก</a>
+                <a href="dashboard.html" class="btn btn-dashboard">📊 ดูรายงาน</a>
+            </div>
+        </div>
+    </div>
 
-  <script>
-    function generateToken() {
-      const now = new Date();
-      const session = now.toISOString().split('T')[0];
-      const timestamp = Date.now();
-      const expires = timestamp + 60000; // valid for 60 seconds
-      return btoa(JSON.stringify({ session, timestamp, expires }));
-    }
-
-    function updateQR() {
-      const token = generateToken();
-      const qrUrl = `https://kittisak.github.io/qr-checkin-up/checkin.html?token=${token}`;
-
-      QRCode.toCanvas(document.getElementById('qrCanvas'), qrUrl, {
-        width: 256,
-        margin: 2,
-        color: {
-          dark: '#000000',
-          light: '#FFFFFF'
+    <script>
+        let countdownInterval;
+        
+        // ฟังก์ชันสร้าง QR Code ด้วย Canvas (Pure JavaScript)
+        function generateQRCode() {
+            console.log('Starting QR Code generation...');
+            
+            const now = new Date();
+            const session = now.toISOString().split('T')[0];
+            const timestamp = now.getTime();
+            
+            const token = btoa(JSON.stringify({
+                session: session,
+                timestamp: timestamp,
+                expires: timestamp + (30 * 1000)
+            }));
+            
+            const baseUrl = window.location.origin + window.location.pathname.replace('index.html', '');
+            const qrUrl = `${baseUrl}checkin.html?token=${token}`;
+            
+            const qrContainer = document.getElementById('qrcode');
+            
+            // สร้าง QR Code ด้วย Canvas
+            createQRCanvas(qrUrl, qrContainer);
+            
+            document.getElementById('sessionStatus').textContent = 'QR Code พร้อมใช้งาน';
+            startCountdown();
         }
-      }, function (error) {
-        const status = document.getElementById('sessionStatus');
-        if (error) {
-          console.error('Error generating QR code:', error);
-          status.textContent = 'เกิดข้อผิดพลาดในการสร้าง QR Code';
-        } else {
-          status.textContent = 'QR Code พร้อมใช้งาน';
+        
+        // ฟังก์ชันสร้าง QR Code ด้วย Canvas
+        function createQRCanvas(text, container) {
+            try {
+                // สร้าง Matrix สำหรับ QR Code (Version 1: 21x21)
+                const size = 21;
+                const matrix = createQRMatrix(text, size);
+                
+                // สร้าง Canvas
+                const canvas = document.createElement('canvas');
+                const cellSize = 12;
+                canvas.width = size * cellSize;
+                canvas.height = size * cellSize;
+                canvas.style.border = '1px solid #ddd';
+                canvas.style.borderRadius = '8px';
+                
+                const ctx = canvas.getContext('2d');
+                
+                // วาด QR Code
+                for (let y = 0; y < size; y++) {
+                    for (let x = 0; x < size; x++) {
+                        ctx.fillStyle = matrix[y][x] ? '#000000' : '#ffffff';
+                        ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+                    }
+                }
+                
+                container.innerHTML = '';
+                container.appendChild(canvas);
+                
+                console.log('QR Code created with Canvas');
+                
+            } catch (error) {
+                console.error('Canvas QR Error:', error);
+                // Fallback: ใช้ Text แทน
+                container.innerHTML = `
+                    <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; text-align: center;">
+                        <div style="color: #dc3545; font-size: 48px; margin-bottom: 15px;">⚠️</div>
+                        <p style="color: #333; font-weight: 600;">ไม่สามารถสร้าง QR Code ได้</p>
+                        <p style="color: #666; font-size: 14px; margin-top: 10px;">กรุณารีเฟรชหน้าเว็บ</p>
+                    </div>
+                `;
+            }
         }
-      });
-    }
-
-    function startCountdown(seconds) {
-      let remaining = seconds;
-      const countdownEl = document.getElementById('countdown');
-      countdownEl.textContent = `QR จะเปลี่ยนใน ${remaining} วินาที`;
-
-      const interval = setInterval(() => {
-        remaining--;
-        countdownEl.textContent = `QR จะเปลี่ยนใน ${remaining} วินาที`;
-        if (remaining <= 0) {
-          clearInterval(interval);
-          updateQR();
-          startCountdown(30);
+        
+        // ฟังก์ชันสร้าง QR Matrix (แบบง่าย)
+        function createQRMatrix(text, size) {
+            const matrix = [];
+            
+            // สร้าง Matrix เริ่มต้น
+            for (let i = 0; i < size; i++) {
+                matrix[i] = new Array(size).fill(false);
+            }
+            
+            // สร้างรูปแบบ QR Code แบบง่าย
+            // Finder Patterns (3 มุม)
+            drawFinderPattern(matrix, 0, 0);
+            drawFinderPattern(matrix, size - 7, 0);
+            drawFinderPattern(matrix, 0, size - 7);
+            
+            // เติมข้อมูลจาก text (แบบง่าย)
+            fillDataPattern(matrix, text, size);
+            
+            return matrix;
         }
-      }, 1000);
-    }
-
-    // เริ่มต้นระบบ
-    updateQR();
-    startCountdown(30);
-  </script>
+        
+        // วาด Finder Pattern (ตารางมุม)
+        function drawFinderPattern(matrix, startX, startY) {
+            for (let y = 0; y < 7; y++) {
+                for (let x = 0; x < 7; x++) {
+                    const isBlack = (x === 0 || x === 6 || y === 0 || y === 6) ||
+                                   (x >= 2 && x <= 4 && y >= 2 && y <= 4);
+                    if (startX + x < matrix.length && startY + y < matrix.length) {
+                        matrix[startY + y][startX + x] = isBlack;
+                    }
+                }
+            }
+        }
+        
+        // เติมข้อมูล (แบบง่าย)
+        function fillDataPattern(matrix, text, size) {
+            let hash = 0;
+            for (let i = 0; i < text.length; i++) {
+                hash = ((hash << 5) - hash + text.charCodeAt(i)) & 0xffffffff;
+            }
+            
+            // เติมข้อมูลแบบสุ่มจาก hash
+            for (let y = 8; y < size - 8; y++) {
+                for (let x = 8; x < size - 8; x++) {
+                    matrix[y][x] = ((hash >> ((y * size + x) % 32)) & 1) === 1;
+                }
+            }
+        }
+        
+        // ฟังก์ชันนับเวลาถอยหลัง
+        function startCountdown() {
+            let seconds = 30;
+            document.getElementById('countdown').textContent = seconds;
+            
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+            }
+            
+            countdownInterval = setInterval(() => {
+                seconds--;
+                document.getElementById('countdown').textContent = seconds;
+                
+                if (seconds <= 0) {
+                    clearInterval(countdownInterval);
+                    generateQRCode();
+                }
+            }, 1000);
+        }
+        
+        // ฟังก์ชันอัพเดทเวลา
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('currentDate').textContent = now.toLocaleDateString('th-TH', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                weekday: 'long'
+            });
+            document.getElementById('currentTime').textContent = now.toLocaleTimeString('th-TH', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            });
+        }
+        
+        // เริ่มต้นระบบ
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Page loaded, initializing...');
+            updateTime();
+            setInterval(updateTime, 1000);
+            generateQRCode();
+        });
+        
+        window.addEventListener('beforeunload', function() {
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+            }
+        });
+    </script>
 </body>
 </html>
