@@ -222,7 +222,26 @@
         <div class="content">
             <div id="statusMessage" class="status-card loading">
                 <div class="spinner" style="margin: 0 auto 10px;"></div>
-                กำลังตรวจสอบข้อมูล...
+                กรุณาใส่รหัส PIN จากหน้าจอ
+            </div>
+            
+            <div id="pinSection" class="login-section">
+                <h3>กรุณาใส่รหัส PIN</h3>
+                <p style="margin: 15px 0; color: #666;">ดูรหัส PIN จากหน้าจอในห้องเรียน</p>
+                
+                <div style="margin: 20px 0;">
+                    <input type="text" 
+                           id="pinInput" 
+                           placeholder="กรอกรหัส PIN (6 หลัก)"
+                           style="width: 200px; padding: 15px; font-size: 18px; text-align: center; 
+                                  border: 2px solid #ddd; border-radius: 10px; letter-spacing: 3px;
+                                  font-family: 'Courier New', monospace; text-transform: uppercase;"
+                           maxlength="6">
+                </div>
+                
+                <button id="verifyPinBtn" class="login-btn">
+                    🔐 ตรวจสอบ PIN
+                </button>
             </div>
             
             <div id="loginSection" class="login-section" style="display: none;">
@@ -345,7 +364,51 @@
 
         // ตัวแปรสำหรับเก็บสถานะ
         let currentUser = null;
-        let tokenData = null;
+        let currentPIN = null;
+
+        // ฟังก์ชันสร้าง PIN เดียวกับหน้า index.html
+        function generateSecurePIN(timestamp) {
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+            let pin = '';
+            let seed = timestamp;
+            
+            for (let i = 0; i < 6; i++) {
+                seed = (seed * 1103515245 + 12345) % (1 << 31);
+                pin += chars[Math.abs(seed) % chars.length];
+            }
+            
+            return pin;
+        }
+
+        // ฟังก์ชันตรวจสอบ PIN
+        function verifyPIN() {
+            const pinInput = document.getElementById('pinInput').value.toUpperCase().trim();
+            
+            if (pinInput.length !== 6) {
+                showStatus('❌ กรุณาใส่รหัส PIN 6 หลัก', 'error');
+                return;
+            }
+
+            // สร้าง PIN ปัจจุบันจาก timestamp
+            const now = new Date();
+            const currentTimestamp = Math.floor(now.getTime() / 30000) * 30000; // ปัดเป็น 30 วินาที
+            const validPIN = generateSecurePIN(currentTimestamp);
+
+            // ตรวจสอบ PIN ก่อนหน้า (กรณีเพิ่งเปลี่ยน)
+            const previousTimestamp = currentTimestamp - 30000;
+            const previousPIN = generateSecurePIN(previousTimestamp);
+
+            if (pinInput === validPIN || pinInput === previousPIN) {
+                currentPIN = pinInput;
+                showStatus('✅ รหัส PIN ถูกต้อง กรุณาเข้าสู่ระบบ', 'success');
+                document.getElementById('pinSection').style.display = 'none';
+                document.getElementById('loginSection').style.display = 'block';
+            } else {
+                showStatus('❌ รหัส PIN ไม่ถูกต้อง กรุณาดูจากหน้าจออีกครั้ง', 'error');
+                document.getElementById('pinInput').value = '';
+                document.getElementById('pinInput').focus();
+            }
+        }
 
         // ฟังก์ชันแสดงสถานะ
         function showStatus(message, type = 'loading') {
@@ -441,7 +504,7 @@
 
         // ฟังก์ชันเช็คชื่อ
         async function performCheckin() {
-            if (!currentUser || !tokenData) {
+            if (!currentUser || !currentPIN) {
                 showStatus('❌ ข้อมูลไม่ครบถ้วน', 'error');
                 return;
             }
@@ -454,15 +517,19 @@
                 const studentId = currentUser.email.split('@')[0];
                 const studentData = studentList[studentId];
                 
+                // สร้าง session จากวันที่ปัจจุบัน
+                const now = new Date();
+                const session = now.toISOString().split('T')[0];
+                
                 // บันทึกข้อมูลลง Firestore
-                const docRef = doc(db, 'checkins', tokenData.session, 'students', studentId);
+                const docRef = doc(db, 'checkins', session, 'students', studentId);
                 
                 await setDoc(docRef, {
                     studentId: studentId,
                     name: studentData.name,
                     email: currentUser.email,
                     checkinTime: serverTimestamp(),
-                    tokenTimestamp: tokenData.timestamp,
+                    pinUsed: currentPIN,
                     userAgent: navigator.userAgent
                 });
                 
