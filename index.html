@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>QR Code สำหรับเช็คชื่อ - ระบบเช็คชื่อนิสิต ม.พะเยา</title>
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -222,65 +221,43 @@
         </div>
     </div>
 
-    <!-- Firebase SDK -->
-    <script type="module">
-        // Import Firebase modules
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
-
-        // Firebase configuration - Config จริงของคุณ
-        const firebaseConfig = {
-            apiKey: "AIzaSyDeD73Yg2QhPXl0dD40uvCsVejpf38OYeY",
-            authDomain: "qr-checkin-up.firebaseapp.com",
-            projectId: "qr-checkin-up",
-            storageBucket: "qr-checkin-up.firebasestorage.app",
-            messagingSenderId: "780428257804",
-            appId: "1:780428257804:web:31b68ff043623144679c29"
-        };
-
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        
+    <script>
         let countdownInterval;
-        let qrRefreshInterval;
         
-        // ฟังก์ชันสร้าง QR Code
+        // ฟังก์ชันสร้าง QR Code ด้วย Google Charts API
         function generateQRCode() {
+            console.log('Starting QR Code generation...');
+            
             const now = new Date();
-            const session = now.toISOString().split('T')[0]; // YYYY-MM-DD
+            const session = now.toISOString().split('T')[0];
             const timestamp = now.getTime();
             
-            // สร้าง token
             const token = btoa(JSON.stringify({
                 session: session,
                 timestamp: timestamp,
-                expires: timestamp + (30 * 1000) // หมดอายุใน 30 วินาที
+                expires: timestamp + (30 * 1000)
             }));
             
-            // สร้าง URL สำหรับ QR Code
             const baseUrl = window.location.origin + window.location.pathname.replace('index.html', '');
             const qrUrl = `${baseUrl}checkin.html?token=${token}`;
             
-            // ล้าง QR Code เดิม
-            document.getElementById('qrcode').innerHTML = '';
+            const qrContainer = document.getElementById('qrcode');
             
-            // สร้าง QR Code ใหม่
-            QRCode.toCanvas(document.getElementById('qrcode'), qrUrl, {
-                width: 256,
-                margin: 2,
-                color: {
-                    dark: '#000000',
-                    light: '#FFFFFF'
-                }
-            }, function (error) {
-                if (error) {
-                    console.error('Error generating QR code:', error);
-                    document.getElementById('sessionStatus').textContent = 'เกิดข้อผิดพลาดในการสร้าง QR Code';
-                } else {
-                    document.getElementById('sessionStatus').textContent = 'QR Code พร้อมใช้งาน';
-                }
-            });
+            // ใช้ Google Charts API สร้าง QR Code
+            const encodedUrl = encodeURIComponent(qrUrl);
+            const qrImageUrl = `https://chart.googleapis.com/chart?cht=qr&chs=256x256&chl=${encodedUrl}`;
             
-            // รีเซ็ต countdown
+            qrContainer.innerHTML = `
+                <img src="${qrImageUrl}" 
+                     alt="QR Code" 
+                     style="max-width: 256px; height: auto; border: 1px solid #ddd; border-radius: 8px;"
+                     onload="console.log('QR Code loaded successfully')"
+                     onerror="console.error('QR Code failed to load')">
+            `;
+            
+            console.log('QR Code created successfully');
+            document.getElementById('sessionStatus').textContent = 'QR Code พร้อมใช้งาน';
+            
             startCountdown();
         }
         
@@ -299,7 +276,7 @@
                 
                 if (seconds <= 0) {
                     clearInterval(countdownInterval);
-                    generateQRCode(); // สร้าง QR Code ใหม่
+                    generateQRCode();
                 }
             }, 1000);
         }
@@ -307,42 +284,31 @@
         // ฟังก์ชันอัพเดทเวลา
         function updateTime() {
             const now = new Date();
-            const dateOptions = {
+            document.getElementById('currentDate').textContent = now.toLocaleDateString('th-TH', {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric',
                 weekday: 'long'
-            };
-            const timeOptions = {
+            });
+            document.getElementById('currentTime').textContent = now.toLocaleTimeString('th-TH', {
                 hour: '2-digit',
                 minute: '2-digit',
                 second: '2-digit',
                 hour12: false
-            };
-            
-            document.getElementById('currentDate').textContent = now.toLocaleDateString('th-TH', dateOptions);
-            document.getElementById('currentTime').textContent = now.toLocaleTimeString('th-TH', timeOptions);
+            });
         }
         
         // เริ่มต้นระบบ
         document.addEventListener('DOMContentLoaded', function() {
-            // อัพเดทเวลาทันที
+            console.log('Page loaded, initializing...');
             updateTime();
-            
-            // อัพเดทเวลาทุกวินาที
             setInterval(updateTime, 1000);
-            
-            // สร้าง QR Code แรก
             generateQRCode();
         });
         
-        // ทำความสะอาดเมื่อออกจากหน้า
         window.addEventListener('beforeunload', function() {
             if (countdownInterval) {
                 clearInterval(countdownInterval);
-            }
-            if (qrRefreshInterval) {
-                clearInterval(qrRefreshInterval);
             }
         });
     </script>
