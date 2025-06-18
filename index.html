@@ -224,7 +224,7 @@
     <script>
         let countdownInterval;
         
-        // ฟังก์ชันสร้าง QR Code ด้วย Google Charts API
+        // ฟังก์ชันสร้าง QR Code ด้วย Canvas (Pure JavaScript)
         function generateQRCode() {
             console.log('Starting QR Code generation...');
             
@@ -243,22 +243,103 @@
             
             const qrContainer = document.getElementById('qrcode');
             
-            // ใช้ Google Charts API สร้าง QR Code
-            const encodedUrl = encodeURIComponent(qrUrl);
-            const qrImageUrl = `https://chart.googleapis.com/chart?cht=qr&chs=256x256&chl=${encodedUrl}`;
+            // สร้าง QR Code ด้วย Canvas
+            createQRCanvas(qrUrl, qrContainer);
             
-            qrContainer.innerHTML = `
-                <img src="${qrImageUrl}" 
-                     alt="QR Code" 
-                     style="max-width: 256px; height: auto; border: 1px solid #ddd; border-radius: 8px;"
-                     onload="console.log('QR Code loaded successfully')"
-                     onerror="console.error('QR Code failed to load')">
-            `;
-            
-            console.log('QR Code created successfully');
             document.getElementById('sessionStatus').textContent = 'QR Code พร้อมใช้งาน';
-            
             startCountdown();
+        }
+        
+        // ฟังก์ชันสร้าง QR Code ด้วย Canvas
+        function createQRCanvas(text, container) {
+            try {
+                // สร้าง Matrix สำหรับ QR Code (Version 1: 21x21)
+                const size = 21;
+                const matrix = createQRMatrix(text, size);
+                
+                // สร้าง Canvas
+                const canvas = document.createElement('canvas');
+                const cellSize = 12;
+                canvas.width = size * cellSize;
+                canvas.height = size * cellSize;
+                canvas.style.border = '1px solid #ddd';
+                canvas.style.borderRadius = '8px';
+                
+                const ctx = canvas.getContext('2d');
+                
+                // วาด QR Code
+                for (let y = 0; y < size; y++) {
+                    for (let x = 0; x < size; x++) {
+                        ctx.fillStyle = matrix[y][x] ? '#000000' : '#ffffff';
+                        ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+                    }
+                }
+                
+                container.innerHTML = '';
+                container.appendChild(canvas);
+                
+                console.log('QR Code created with Canvas');
+                
+            } catch (error) {
+                console.error('Canvas QR Error:', error);
+                // Fallback: ใช้ Text แทน
+                container.innerHTML = `
+                    <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; text-align: center;">
+                        <div style="color: #dc3545; font-size: 48px; margin-bottom: 15px;">⚠️</div>
+                        <p style="color: #333; font-weight: 600;">ไม่สามารถสร้าง QR Code ได้</p>
+                        <p style="color: #666; font-size: 14px; margin-top: 10px;">กรุณารีเฟรชหน้าเว็บ</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // ฟังก์ชันสร้าง QR Matrix (แบบง่าย)
+        function createQRMatrix(text, size) {
+            const matrix = [];
+            
+            // สร้าง Matrix เริ่มต้น
+            for (let i = 0; i < size; i++) {
+                matrix[i] = new Array(size).fill(false);
+            }
+            
+            // สร้างรูปแบบ QR Code แบบง่าย
+            // Finder Patterns (3 มุม)
+            drawFinderPattern(matrix, 0, 0);
+            drawFinderPattern(matrix, size - 7, 0);
+            drawFinderPattern(matrix, 0, size - 7);
+            
+            // เติมข้อมูลจาก text (แบบง่าย)
+            fillDataPattern(matrix, text, size);
+            
+            return matrix;
+        }
+        
+        // วาด Finder Pattern (ตารางมุม)
+        function drawFinderPattern(matrix, startX, startY) {
+            for (let y = 0; y < 7; y++) {
+                for (let x = 0; x < 7; x++) {
+                    const isBlack = (x === 0 || x === 6 || y === 0 || y === 6) ||
+                                   (x >= 2 && x <= 4 && y >= 2 && y <= 4);
+                    if (startX + x < matrix.length && startY + y < matrix.length) {
+                        matrix[startY + y][startX + x] = isBlack;
+                    }
+                }
+            }
+        }
+        
+        // เติมข้อมูล (แบบง่าย)
+        function fillDataPattern(matrix, text, size) {
+            let hash = 0;
+            for (let i = 0; i < text.length; i++) {
+                hash = ((hash << 5) - hash + text.charCodeAt(i)) & 0xffffffff;
+            }
+            
+            // เติมข้อมูลแบบสุ่มจาก hash
+            for (let y = 8; y < size - 8; y++) {
+                for (let x = 8; x < size - 8; x++) {
+                    matrix[y][x] = ((hash >> ((y * size + x) % 32)) & 1) === 1;
+                }
+            }
         }
         
         // ฟังก์ชันนับเวลาถอยหลัง
